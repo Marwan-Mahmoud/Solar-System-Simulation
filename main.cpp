@@ -8,7 +8,7 @@ using namespace std;
 // Globals.
 static float latAngle = 0.0; // Latitudinal angle of moon.
 static float longAngle = 0.0; // Longitudinal angle of moon.
-static int animationPeriod = 50; // Time interval between frames.
+const static int animationPeriod = 50; // Time interval between frames.
 const static int slices = 50;
 
 class Planet {
@@ -23,22 +23,19 @@ public:
 
     float getRadius() { return radius; }
 
-    float getAngVelocity() { return angVelocity; }
-
     void draw();
 
     void update();
 
+    void drawOrbit();
+
 private:
     float distance, angle, radius, angVelocity;
     float color[4];
-
-    void drawOrbit();
 };
 
 Planet::Planet() {}
 
-// Planet constructor.
 Planet::Planet(float distance, float radius, unsigned char r, unsigned char g, unsigned char b) {
     this->distance = distance;
     this->radius = radius;
@@ -50,10 +47,7 @@ Planet::Planet(float distance, float radius, unsigned char r, unsigned char g, u
     angVelocity = (8 - (distance - 8) / 8) / 4;
 }
 
-// Function to draw Planet.
 void Planet::draw() {
-    drawOrbit();
-
     glMaterialfv(GL_FRONT, GL_AMBIENT, color);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, color);
 
@@ -86,38 +80,52 @@ class Spacecraft {
 public:
     Spacecraft();
 
-    Spacecraft(float x, float y, float angle);
+    Spacecraft(float x, float y, float z, float angleA, float angleB);
 
     void draw();
-
-    void update();
 
     float getX() { return x; }
 
     float getY() { return y; }
 
-    float getAngle() { return angle; }
+    float getZ() { return z; }
 
-    void setAngVelocity(float v) { angVelocity = v; }
+    float getAngleA() { return angleA; }
+
+    float getAngleB() { return angleB; }
+
+    void rotateCCW();
+
+    void rotateCW();
+
+    void rotateUp();
+
+    void rotateDown();
+
+    void forward();
+
+    void backward();
 
 private:
-    float x, y, angle, angVelocity;
+    float x, y, z, angleA, angleB;
 };
 
 Spacecraft::Spacecraft() {}
 
-Spacecraft::Spacecraft(float x, float y, float angle) {
+Spacecraft::Spacecraft(float x, float y, float z, float angleA, float angleB) {
     this->x = x;
     this->y = y;
-    this->angle = angle;
-    angVelocity = 0.0;
+    this->z = z;
+    this->angleA = angleA;
+    this->angleB = angleB;
 }
 
 void Spacecraft::draw() {
     glDisable(GL_LIGHTING);
     glPushMatrix();
-    glTranslatef(x, y, 0.0);
-    glRotatef(angle, 0.0, 0.0, 1.0);
+    glTranslatef(x, y, z);
+    glRotatef(angleA, 0.0, 0.0, 1.0);
+    glRotatef(angleB, 0.0, 1.0, 0.0);
     glRotatef(90.0, 0.0, 1.0, 0.0);
     glColor3f(1.0, 1.0, 1.0);
     glutSolidCone(1.0, 3.0, slices, slices);
@@ -125,24 +133,47 @@ void Spacecraft::draw() {
     glEnable(GL_LIGHTING);
 }
 
-void Spacecraft::update() {
-    float tempX = x;
-    float tempY = y;
-    x = tempX * cos(angVelocity * M_PI / 180) - tempY * sin(angVelocity * M_PI / 180);
-    y = tempX * sin(angVelocity * M_PI / 180) + tempY * cos(angVelocity * M_PI / 180);
+void Spacecraft::rotateCCW() {
+    angleA += 5.0;
+    if (angleA > 360.0) angleA -= 360.0;
 }
 
-Spacecraft spacecraft = Spacecraft(-60, -60, 45);
+void Spacecraft::rotateCW() {
+    angleA -= 5.0;
+    if (angleA < 0.0) angleA += 360.0;
+}
+
+void Spacecraft::forward() {
+    x += cos(angleB * M_PI / 180.0) * cos(angleA * M_PI / 180.0);
+    y += cos(angleB * M_PI / 180.0) * sin(angleA * M_PI / 180.0);
+    z += sin(angleB * M_PI / 180.0);
+}
+
+void Spacecraft::backward() {
+    x -= cos(angleB * M_PI / 180.0) * cos(angleA * M_PI / 180.0);
+    y -= cos(angleB * M_PI / 180.0) * sin(angleA * M_PI / 180.0);
+    z -= sin(angleB * M_PI / 180.0);
+}
+
+void Spacecraft::rotateUp() {
+    angleB += 5.0;
+    if (angleB > 360.0) angleB -= 360.0;
+}
+
+void Spacecraft::rotateDown() {
+    angleB -= 5.0;
+    if (angleB < 0.0) angleB += 360.0;
+}
+
+Spacecraft spacecraft = Spacecraft(-60, -60, 0, 45, 0);
 
 // Drawing routine.
 void drawScene(void) {
     float sunPos[] = {0.0, 0.0, 0.0, 1.0};
     float sunReflection[] = {0.0, 0.0, 0.0, 1.0};
-    float sunShine[] = {50.0};
     float sunEmission[] = {253 / 255.0, 184 / 255.0, 19 / 255.0, 1.0};
 
     float plSpec[] = {0.0, 0.0, 0.0, 1.0};
-    float plShine[] = {50.0};
     float plEmission[] = {0.0, 0.0, 0.0, 1.0};
 
     float moonAmbDif[] = {1.0, 1.0, 1.0, 1.0};
@@ -150,17 +181,23 @@ void drawScene(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
-    gluLookAt(0, 0, 70, 0, 0, 0, 0, 1, 0);
+    //gluLookAt(0, 0, 70, 0, 0, 0, 0, 1, 0);
+    float x = spacecraft.getX();
+    float y = spacecraft.getY();
+    float z = spacecraft.getZ();
+    float angleA = spacecraft.getAngleA();
+    float angleB = spacecraft.getAngleB();
+    gluLookAt(x, y, z,
+              x + cos(angleB * M_PI / 180.0) * cos(angleA * M_PI / 180.0),
+              y + cos(angleB * M_PI / 180.0) * sin(angleA * M_PI / 180.0),
+              z + sin(angleB * M_PI / 180.0),
+              0, 0, cos(angleB * M_PI / 180.0));
 
     // Material properties of sun.
     glMaterialfv(GL_FRONT, GL_AMBIENT, sunReflection);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, sunReflection);
     glMaterialfv(GL_FRONT, GL_SPECULAR, sunReflection);
-    glMaterialfv(GL_FRONT, GL_SHININESS, sunShine);
     glMaterialfv(GL_FRONT, GL_EMISSION, sunEmission);
-
-    // Light quadratic attenuation factor.
-    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0);
 
     // Light0 and its sphere positioned.
     glPushMatrix();
@@ -170,16 +207,24 @@ void drawScene(void) {
 
     // Material properties of planets.
     glMaterialfv(GL_FRONT, GL_SPECULAR, plSpec);
-    glMaterialfv(GL_FRONT, GL_SHININESS, plShine);
     glMaterialfv(GL_FRONT, GL_EMISSION, plEmission);
 
+    // Draw Planets.
     for (int i = 0; i < 8; i++) {
         planet[i].draw();
+        planet[i].drawOrbit();
+        if (i == 5) {
+            glPushMatrix();
+            glRotatef(planet[i].getAngle(), 0.0, 0.0, 1.0);
+            glTranslatef(planet[i].getDistance(), 0.0, 0.0);
+            glRotatef(-20, 0.0, 1.0, 0.0);
+            glutSolidTorus(0.25, planet[i].getRadius() + 0.5, slices, slices);
+            glPopMatrix();
+        }
     }
 
     // Material properties of moon.
-    glMaterialfv(GL_FRONT, GL_AMBIENT, moonAmbDif);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, moonAmbDif);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, moonAmbDif);
 
     // Draw moon.
     glPushMatrix();
@@ -205,7 +250,6 @@ void animate(int value) {
     for (int i = 0; i < 8; i++) {
         planet[i].update();
     }
-    spacecraft.update();
 
     glutPostRedisplay();
     glutTimerFunc(animationPeriod, animate, 0);
@@ -235,13 +279,13 @@ void setup(void) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    // Initialize planets
+    // Initialize planets.
     planet[0] = Planet(8, 1, 183, 184, 185);
     planet[1] = Planet(16, 1.5, 227, 158, 28);
     planet[2] = Planet(24, 1.5, 0, 66, 129);
     planet[3] = Planet(32, 1, 156, 46, 53);
     planet[4] = Planet(40, 3.5, 206, 165, 137);
-    planet[5] = Planet(48, 3.5, 205, 160, 86);
+    planet[5] = Planet(48, 3.0, 205, 160, 86);
     planet[6] = Planet(56, 2.5, 147, 184, 190);
     planet[7] = Planet(64, 2.5, 63, 84, 186);
 
@@ -262,6 +306,13 @@ void keyInput(unsigned char key, int x, int y) {
     switch (key) {
         case 27:
             exit(0);
+        case 'w':
+            spacecraft.forward();
+            glutPostRedisplay();
+            break;
+        case 's':
+            spacecraft.backward();
+            glutPostRedisplay();
             break;
         default:
             break;
@@ -270,14 +321,18 @@ void keyInput(unsigned char key, int x, int y) {
 
 // Callback routine for non-ASCII key entry.
 void specialKeyInput(int key, int x, int y) {
-    if (key == GLUT_KEY_DOWN) animationPeriod += 5;
-    if (key == GLUT_KEY_UP) if (animationPeriod > 5) animationPeriod -= 5;
+    if (key == GLUT_KEY_UP) spacecraft.rotateUp();
+    if (key == GLUT_KEY_DOWN) spacecraft.rotateDown();
+    if (key == GLUT_KEY_LEFT) spacecraft.rotateCCW();
+    if (key == GLUT_KEY_RIGHT) spacecraft.rotateCW();
     glutPostRedisplay();
 }
 
 // Routine to output interaction instructions to the C++ window.
 void printInteraction(void) {
-    std::cout << "Interaction:" << std::endl;
+    std::cout << "Interaction:" << std::endl << '\n'
+              << "Press the up/down/left/right arrow keys to turn the spacecraft." << '\n'
+              << "Press the w/s keys to move the spacecraft." << std::endl;
 }
 
 // Main routine.
