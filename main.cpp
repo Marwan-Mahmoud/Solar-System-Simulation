@@ -8,6 +8,7 @@ using namespace std;
 // Globals.
 static float latAngle = 0.0; // Latitudinal angle of moon.
 static float longAngle = 0.0; // Longitudinal angle of moon.
+static int viewMap = 0;
 const static int animationPeriod = 50; // Time interval between frames.
 const static int slices = 50;
 
@@ -167,8 +168,7 @@ void Spacecraft::rotateDown() {
 
 Spacecraft spacecraft = Spacecraft(-60, -60, 0, 45, 0);
 
-// Drawing routine.
-void drawScene(void) {
+void drawSolarSystem() {
     float sunPos[] = {0.0, 0.0, 0.0, 1.0};
     float sunReflection[] = {0.0, 0.0, 0.0, 1.0};
     float sunEmission[] = {253 / 255.0, 184 / 255.0, 19 / 255.0, 1.0};
@@ -177,21 +177,6 @@ void drawScene(void) {
     float plEmission[] = {0.0, 0.0, 0.0, 1.0};
 
     float moonAmbDif[] = {1.0, 1.0, 1.0, 1.0};
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-
-    //gluLookAt(0, 0, 70, 0, 0, 0, 0, 1, 0);
-    float x = spacecraft.getX();
-    float y = spacecraft.getY();
-    float z = spacecraft.getZ();
-    float angleA = spacecraft.getAngleA();
-    float angleB = spacecraft.getAngleB();
-    gluLookAt(x, y, z,
-              x + cos(angleB * M_PI / 180.0) * cos(angleA * M_PI / 180.0),
-              y + cos(angleB * M_PI / 180.0) * sin(angleA * M_PI / 180.0),
-              z + sin(angleB * M_PI / 180.0),
-              0, 0, cos(angleB * M_PI / 180.0));
 
     // Material properties of sun.
     glMaterialfv(GL_FRONT, GL_AMBIENT, sunReflection);
@@ -234,6 +219,36 @@ void drawScene(void) {
     glTranslatef(2, 0, 0);
     glutSolidSphere(.5, slices, slices);
     glPopMatrix();
+}
+
+// Drawing routine.
+void drawScene(void) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, 600, 600);
+
+    if (!viewMap) {
+        glLoadIdentity();
+
+        float x = spacecraft.getX();
+        float y = spacecraft.getY();
+        float z = spacecraft.getZ();
+        float angleA = spacecraft.getAngleA();
+        float angleB = spacecraft.getAngleB();
+        gluLookAt(x, y, z,
+                  x + cos(angleB * M_PI / 180.0) * cos(angleA * M_PI / 180.0),
+                  y + cos(angleB * M_PI / 180.0) * sin(angleA * M_PI / 180.0),
+                  z + sin(angleB * M_PI / 180.0),
+                  0, 0, cos(angleB * M_PI / 180.0));
+
+        drawSolarSystem();
+
+        glViewport(400, 0, 200, 200);
+    }
+
+    glLoadIdentity();
+    gluLookAt(0, 0, 70, 0, 0, 0, 0, 1, 0);
+
+    drawSolarSystem();
 
     // Draw Spacecraft.
     spacecraft.draw();
@@ -312,6 +327,10 @@ void keyInput(unsigned char key, int x, int y) {
             break;
         case 's':
             spacecraft.backward();
+            glutPostRedisplay();
+            break;
+        case 'm':
+            viewMap = 1 - viewMap;
             glutPostRedisplay();
             break;
         default:
