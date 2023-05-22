@@ -6,7 +6,6 @@
 using namespace std;
 
 // Globals.
-static float latAngle = 0.0; // Latitudinal angle of moon.
 static float longAngle = 0.0; // Longitudinal angle of moon.
 static int viewMap = 0;
 const static int animationPeriod = 50; // Time interval between frames.
@@ -215,7 +214,8 @@ void drawSolarSystem() {
     glPushMatrix();
     glRotatef(planet[2].getAngle(), 0.0, 0.0, 1.0);
     glTranslatef(planet[2].getDistance(), 0.0, 0.0);
-    glRotatef(latAngle, 0.0, 1.0, 0.0);
+    glRotatef(-20, 0.0, 1.0, 0.0);
+    glRotatef(longAngle, 0.0, 0.0, 1.0);
     glTranslatef(2, 0, 0);
     glutSolidSphere(.5, slices, slices);
     glPopMatrix();
@@ -258,9 +258,7 @@ void drawScene(void) {
 
 // Timer function.
 void animate(int value) {
-    latAngle += 5.0;
-    if (latAngle > 360.0) latAngle -= 360.0;
-    longAngle += 1.0;
+    longAngle += 5.0;
     if (longAngle > 360.0) longAngle -= 360.0;
     for (int i = 0; i < 8; i++) {
         planet[i].update();
@@ -351,7 +349,8 @@ void specialKeyInput(int key, int x, int y) {
 void printInteraction(void) {
     std::cout << "Interaction:" << std::endl << '\n'
               << "Press the up/down/left/right arrow keys to turn the spacecraft." << '\n'
-              << "Press the w/s keys to move the spacecraft." << std::endl;
+              << "Press the w/s keys to move the spacecraft." << '\n'
+              << "Press m key to view/hide full map" << std::endl;
 }
 
 // Main routine.
