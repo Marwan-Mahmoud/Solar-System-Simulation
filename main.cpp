@@ -5,7 +5,8 @@
 
 using namespace std;
 
-// Globals.
+const static int width = 600; // Width of window.
+const static int height = 600; // Height of window.
 static float longAngle = 0.0; // Longitudinal angle of moon.
 static int viewMap = 0;
 const static int animationPeriod = 50; // Time interval between frames.
@@ -197,6 +198,7 @@ void drawSolarSystem() {
     for (int i = 0; i < 8; i++) {
         planet[i].draw();
         planet[i].drawOrbit();
+        // If Saturn, draw rings.
         if (i == 5) {
             glPushMatrix();
             glRotatef(planet[i].getAngle(), 0.0, 0.0, 1.0);
@@ -224,7 +226,7 @@ void drawSolarSystem() {
 // Drawing routine.
 void drawScene(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, 600, 600);
+    glViewport(0, 0, width, height);
 
     if (!viewMap) {
         glLoadIdentity();
@@ -242,7 +244,7 @@ void drawScene(void) {
 
         drawSolarSystem();
 
-        glViewport(400, 0, 200, 200);
+        glViewport(width * 2 / 3, 0, width / 3, height / 3);
     }
 
     glLoadIdentity();
@@ -362,7 +364,7 @@ int main(int argc, char **argv) {
     glutInitContextProfile(GLUT_COMPATIBILITY_PROFILE);
 
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutInitWindowSize(600, 600);
+    glutInitWindowSize(width, height);
     glutInitWindowPosition(50, 50);
     glutCreateWindow("Solar System Simulation");
     glutDisplayFunc(drawScene);
