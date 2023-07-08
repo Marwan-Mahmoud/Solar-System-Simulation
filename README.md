@@ -20,7 +20,7 @@ To run this program, you need to have the following installed:
 1. Clone the repository:
 
    ```
-   git clone https://github.com/Marwan-Mahmoud/solar-system-simulation.git
+   git clone https://github.com/Marwan-Mahmoud/Solar-System-Simulation.git
    ```
 
 2. Compile the program using your preferred C++ compiler:
@@ -43,8 +43,8 @@ To run this program, you need to have the following installed:
 
 ## Screenshots
 
-![Screenshot 1](screenshots/1.png)
-![Screenshot 2](screenshots/2.png)
-![Screenshot 3](screenshots/3.png)
-![Screenshot 4](screenshots/4.png)
-![Screenshot 5](screenshots/5.png)
+![Screenshot 1](screenshots/1.PNG)
+![Screenshot 2](screenshots/2.PNG)
+![Screenshot 3](screenshots/3.PNG)
+![Screenshot 4](screenshots/4.PNG)
+![Screenshot 5](screenshots/5.PNG)
